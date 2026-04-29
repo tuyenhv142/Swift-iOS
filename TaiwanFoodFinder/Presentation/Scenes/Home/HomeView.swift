@@ -71,6 +71,30 @@ struct HomeView: View {
         }
         .navigationTitle("Khám phá")
         .navigationBarHidden(true)
+        .refreshable {
+            await viewModel.loadRestaurants(page: 1, limit: 20)
+        }
+        .overlay {
+            if viewModel.isLoading && viewModel.restaurants.isEmpty {
+                ProgressView("Loading...")
+                    .padding()
+                    .background(Color(.systemBackground).opacity(0.9))
+                    .cornerRadius(12)
+            }
+        }
+        .alert("Error", isPresented: Binding<Bool>(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("Retry") {
+                Task { await viewModel.loadRestaurants(page: 1, limit: 20) }
+            }
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 }
 
@@ -98,7 +122,7 @@ struct HorizontalSection: View {
                         // Khi bấm vào thẻ nhỏ, mở ra màn hình chi tiết
                         NavigationLink(destination: RestaurantDetailView(restaurant: restaurant, viewModel: RestaurantViewModel(
                             restaurantId: restaurant.id,
-                            review: ReviewDTO(rating: 5, comment: "") // Provide a default empty review
+                            review: ReviewDTO(rating: 0, comment: "") // Provide a default empty review
                         ))) {
                             MiniRestaurantCard(restaurant: restaurant)
                         }

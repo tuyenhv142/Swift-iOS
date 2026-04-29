@@ -7,13 +7,6 @@
 
 import Foundation
 
-// Wrapper chung cho mọi API của Hoang
-struct APIResponseDTO<T: Codable>: Codable {
-    let success: Bool
-    let data: T?
-    let error: String?
-}
-
 // DTO cho bước lấy mã tạm
 struct PreAuthTokenDTO: Codable {
     let preAuthToken: String

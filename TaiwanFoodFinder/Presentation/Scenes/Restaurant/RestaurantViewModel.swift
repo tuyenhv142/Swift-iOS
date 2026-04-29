@@ -1,60 +1,39 @@
-//
-//  RestaurantViewModel.swift
-//  TaiwanFoodFinder
-//
-//  Created by Hoang Mit on 2026/4/16.
-//
-
 import Foundation
-internal import Combine
+import Combine
 
 @MainActor
 class RestaurantViewModel: ObservableObject {
-    @Published var isReviewPosted: Bool = false // Đổi từ isLoggedIn -> isReviewPosted
+    @Published var isReviewPosted: Bool = false
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
-    
     @Published var restaurantId: Int
-    @Published var review: ReviewDTO
-    
-    
-    // Truyền thẳng restaurantId vào hàm init sẽ an toàn hơn
+
+    var review: ReviewDTO
+
+    private let network = NetworkManager.shared
+
     init(restaurantId: Int, review: ReviewDTO) {
         self.restaurantId = restaurantId
         self.review = review
     }
-    
-    private let restaurantRepo = RestaurantRepository()
-    
-    // Đổi tên hàm cho chuẩn với chức năng
+
     func submitReview() async {
-        // Sửa lại logic: Bắt buộc ID phải KHÁC 0
         guard restaurantId != 0 else {
-            errorMessage = "Falied to submit review. Please try again"
+            errorMessage = "Failed to submit review. Please try again"
             return
         }
-        
+
         isLoading = true
-        
         defer { isLoading = false }
-        
         errorMessage = nil
-        
+
         do {
-            // Chú ý: Check lại xem bên Repository bạn viết là postReview hay postReView (chữ V viết hoa)
-            let _ = try await restaurantRepo.postReview(restaurantId: restaurantId, review: review)
-            
+            let _ = try await RestaurantRepository(network: network)
+                .postReview(restaurantId: restaurantId, rating: review.rating, comment: review.comment)
             isReviewPosted = true
         } catch {
-            // Sửa lại thông báo lỗi cho hợp lý
-            print("❌ LỖI GỌI API: \(error.localizedDescription)")
-                if let nsError = error as NSError? {
-                    print("Mã lỗi: \(nsError.code)")
-                    print("Chi tiết: \(nsError.userInfo)")
-                }
-            errorMessage = "Đã xảy ra lỗi khi gửi đánh giá. Vui lòng thử lại!"
-            print("Lỗi Add Review: \(error)") // Nên in ra console để dễ debug
+            print("❌ Error submitting review: \(error.localizedDescription)")
+            errorMessage = "Failed to submit review. Please try again."
         }
     }
 }
-

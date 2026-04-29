@@ -10,8 +10,7 @@ import MapKit
 
 struct MapView: View {
     let restaurants: [RestaurantDTO]
-    
-    let reviewSuccessPublisher = NotificationCenter.default.publisher(for: NSNotification.Name("ReviewPostedSuccess"))
+
     // 2. Khởi tạo đối tượng theo dõi vị trí
     @StateObject private var locationManager = LocationManager()
     
@@ -132,18 +131,19 @@ struct MapView: View {
 //                        .padding(.bottom, 20)
                     // Bọc RestaurantCardView vào trong một Button
                     Button(action: {
-                        // Action để trống vì .sheet sẽ xử lý
+                        // Action để trống vì .fullScreenCover sẽ xử lý
                     }) {
                         RestaurantCardView(restaurant: selected)
                     }
                     .buttonStyle(PlainButtonStyle()) // Xóa hiệu ứng mờ chữ của iOS
-                    // Gắn .sheet vào Button này để mở trang chi tiết
-                    .sheet(item: $selectedRestaurant) { restaurant in
+                    // Gắn .fullScreenCover vào Button này để mở trang chi tiết full màn hình
+                    .fullScreenCover(item: $selectedRestaurant) { restaurant in
                         RestaurantDetailView(
                             restaurant: restaurant,
+                            showDismissButton: true,
                             viewModel: RestaurantViewModel(
                                 restaurantId: restaurant.id,
-                                review: ReviewDTO(rating: 5, comment: "") // Provide a default empty review
+                                review: ReviewDTO(rating: 0, comment: "")
                             )
                         )
                     }
@@ -155,13 +155,6 @@ struct MapView: View {
                 .transition(.move(edge: .bottom))
                 .shadow(radius: 10)
             }
-        }
-        .onReceive(reviewSuccessPublisher) { _ in
-            print("🔄 Đã nghe thấy thông báo! Đang tải lại danh sách nhà hàng...")
-            
-            // Gọi lại hàm load dữ liệu của bạn ở đây
-            // Ví dụ:
-            
         }
     }
     

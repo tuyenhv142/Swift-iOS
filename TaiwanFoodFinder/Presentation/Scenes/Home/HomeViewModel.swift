@@ -1,31 +1,33 @@
-//
-//  HomeViewModel.swift
-//  TaiwanFoodFinder
-//
-//  Created by Hoang Mit on 2026/4/9.
-//
-
 import Foundation
-internal import Combine
+import Combine
 
-// @MainActor đảm bảo mọi cập nhật UI đều diễn ra trên Main Thread (luồng chính)
 @MainActor
 class HomeViewModel: ObservableObject {
-    // @Published: Khi biến này thay đổi, SwiftUI sẽ tự động render lại giao diện
     @Published var restaurants: [RestaurantDTO] = []
-    private let restaurantRepo = RestaurantRepository()
-    // Hàm giả lập việc lấy dữ liệu từ Backend
-    func loadRestaurants(page: Int, limit: Int) async{
-        // Trong thực tế, đây là nơi gọi API (async/await)
-        // Hiện tại dùng Mock Data để phát triển giao diện độc lập
-//        self.restaurants = RestaurantDTO.mockdata
+    @Published var errorMessage: String?
+    @Published var isLoading: Bool = false
+
+    private let network = NetworkManager.shared
+
+    func loadRestaurants(page: Int, limit: Int) async {
+        isLoading = true
+        errorMessage = nil
         do {
-            let data = try await restaurantRepo.GetAll(page: page,limit: limit)
-//            print(data)
+            let data = try await RestaurantRepository(network: network).getAll(page: page, limit: limit)
             self.restaurants = data
-        }catch {
-            print(error)
+        } catch {
+            // Refresh token and retry once
+            print("⚠️ First attempt failed, refreshing token...")
+            do {
+                let token = try await AuthRepository(network: network).fetchPreToken()
+                KeychainManager.shared.save(token, key: "app_jwt_token")
+                let data = try await RestaurantRepository(network: network).getAll(page: page, limit: limit)
+                self.restaurants = data
+            } catch {
+                self.errorMessage = error.localizedDescription
+                print("❌ Load restaurants failed: \(error)")
+            }
         }
-        
+        isLoading = false
     }
 }

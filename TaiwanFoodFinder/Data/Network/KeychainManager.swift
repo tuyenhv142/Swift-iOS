@@ -13,17 +13,21 @@ class KeychainManager {
     
     func save(_ value: String, key: String) {
         let data = Data(value.utf8)
-        let query: [CFString: Any] = [
+
+        // Delete existing item — query must NOT include kSecValueData
+        let deleteQuery: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+
+        // Add new item
+        let addQuery: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: key,
             kSecValueData: data
         ]
-        
-        // Delete existing item if present
-        SecItemDelete(query as CFDictionary)
-        
-        // Add new item
-        let status = SecItemAdd(query as CFDictionary, nil)
+        let status = SecItemAdd(addQuery as CFDictionary, nil)
         if status != errSecSuccess {
             #if DEBUG
             let message = SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error"

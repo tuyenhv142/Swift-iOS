@@ -9,10 +9,11 @@ import SwiftUI
 
 struct RestaurantDetailView: View {
     let restaurant: RestaurantDTO
+    var showDismissButton: Bool = false
     @EnvironmentObject var appState: AppState
     @ObservedObject var viewModel: RestaurantViewModel
     @Environment(\.presentationMode) var presentationMode
-    
+
     @State private var localReviews: [Review] = []
     var body: some View {
         ScrollView {
@@ -33,20 +34,22 @@ struct RestaurantDetailView: View {
                         Color.gray.opacity(0.3)
                             .frame(height: 250)
                     }
-                    
-                    // Nút Back
-//                    Button(action: {
-//                        presentationMode.wrappedValue.dismiss()
-//                    }) {
-//                        Image(systemName: "chevron.left")
-//                            .font(.title3)
-//                            .padding(12)
-//                            .background(Color.white.opacity(0.8))
-//                            .clipShape(Circle())
-//                            .foregroundColor(.black)
-//                    }
-//                    .padding(.top, 50)
-//                    .padding(.leading, 16)
+
+                    // Nút dismiss - chỉ hiện khi mở từ MapView (fullScreenCover)
+                    if showDismissButton {
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
+                                .padding(12)
+                                .background(Color.black.opacity(0.4))
+                                .clipShape(Circle())
+                                .foregroundColor(.white)
+                        }
+                        .padding(.top, 50)
+                        .padding(.leading, 16)
+                    }
                 }
                 
                 // 2. Thông tin chi tiết

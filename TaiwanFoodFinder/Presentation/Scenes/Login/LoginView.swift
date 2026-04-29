@@ -85,11 +85,6 @@ struct LoginView: View {
                 // Tự động lấy mã tạm khi màn hình hiện lên
 //                await viewModel.fetchInitialToken()
             }
-            .navigationDestination(isPresented: $viewModel.isLoggedIn) {
-                // Sau khi login xong sẽ chuyển sang trang chủ
-                ContentView()
-//                Text("Chào mừng \(viewModel.username) đến với Đài Loan!")
-            }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
